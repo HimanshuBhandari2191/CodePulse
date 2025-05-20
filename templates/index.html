@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>C Compiler Visualizer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>C Compiler Visualizer</h1>
+    <textarea id="code" placeholder="Enter C code here...">int main() { return 0; }</textarea>
+    <button onclick="compile()">Compile</button>
+    
+    <div class="output">
+        <h2>Tokens</h2>
+        <pre id="tokens">Tokens will appear here...</pre>
+    </div>
+    
+    <div class="output">
+        <h2>Parse Tree</h2>
+        <pre id="parse-tree">Parse tree will appear here...</pre>
+    </div>
+
+    <script>
+        async function compile() {
+            const code = document.getElementById('code').value;
+            document.getElementById('tokens').textContent = "Processing...";
+            document.getElementById('parse-tree').textContent = "Processing...";
+            
+            try {
+                const response = await fetch('/compile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `code=${encodeURIComponent(code)}`
+                });
+                
+                const data = await response.json();
+                if (data.error) {
+                    document.getElementById('tokens').textContent = `Error: ${data.error}`;
+                    document.getElementById('parse-tree').textContent = '';
+                } else {
+                    document.getElementById('tokens').textContent = data.tokens || 'No tokens generated';
+                    document.getElementById('parse-tree').textContent = data.parse_tree || 'No parse tree generated';
+                }
+            } catch (err) {
+                document.getElementById('tokens').textContent = `Network error: ${err}`;
+                document.getElementById('parse-tree').textContent = '';
+            }
+        }
+    </script>
+</body>
+</html>
