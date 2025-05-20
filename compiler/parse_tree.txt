@@ -1,0 +1,23 @@
+TranslationUnit
++-- Function Definition
+    +-- Return Type: int
+    +-- Function Name: main
+    +-- Parameters
+    +-- Body (Compound Statement)
+        +-- Declaration
+            +-- Type: int
+            +-- Identifier: a
+            +-- Initializer
+                +-- Expression: 10 
+        +-- Declaration
+            +-- Type: int
+            +-- Identifier: b
+            +-- Initializer
+                +-- Expression: 20 
+        +-- Declaration
+            +-- Type: int
+            +-- Identifier: c
+            +-- Initializer
+                +-- Expression: a + b + a + a 
+        +-- Return Statement
+            +-- Expression: 0 

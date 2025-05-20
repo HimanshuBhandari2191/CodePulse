@@ -1,180 +1,144 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include<ctype.h>
 
-#define MAX 100
-
-typedef struct {
-    char type[30];
-    char value[100];
-} Token;
+#define MAX_SYMBOLS 100
+#define MAX_LINE 256
 
 typedef struct {
-    char name[100];
-    char type[30]; // e.g., int, char, float
+    char name[50];
+    char type[20];
+    char scope[50];
 } Symbol;
 
-Token tokens[MAX];
-Symbol symbolTable[MAX];
-int pos = 0, total = 0, symCount = 0;
+Symbol symbolTable[MAX_SYMBOLS];
+int symbolCount = 0;
 
-// Load tokens from lexer output
-void loadTokens() {
-    FILE *fp = fopen("tokens.txt", "r");
-    if (!fp) {
-        printf("Could not open tokens.txt\n");
-        exit(1);
-    }
-    while (fscanf(fp, "%s %s", tokens[total].type, tokens[total].value) != EOF) {
-        total++;
-    }
-    fclose(fp);
-}
+FILE *input, *output;
 
-// Utility: Find symbol in table
-int findSymbol(char *name) {
-    for (int i = 0; i < symCount; i++) {
-        if (strcmp(symbolTable[i].name, name) == 0)
-            return i;
-    }
-    return -1;
-}
-
-// Add variable to symbol table
-void addSymbol(char *name, char *type) {
-    if (findSymbol(name) != -1) {
-        printf("Semantic Error: Redeclaration of variable '%s'\n", name);
-        exit(1);
-    }
-    strcpy(symbolTable[symCount].name, name);
-    strcpy(symbolTable[symCount].type, type);
-    symCount++;
-}
-
-// Match current token type
-int match(char *expectedType) {
-    if (pos < total && strcmp(tokens[pos].type, expectedType) == 0) {
-        pos++;
-        return 1;
-    }
-    return 0;
-}
-
-// Expect a token type and value
-void expect(char *expectedType) {
-    if (!match(expectedType)) {
-        printf("Unexpected token %s (%s)\n", tokens[pos].type, tokens[pos].value);
-        exit(1);
-    }
-}
-
-// Handle variable declaration
-void declaration() {
-    char varType[30];
-    strcpy(varType, tokens[pos].value); // e.g., int
-    expect("KEYWORD");
-
-    while (1) {
-        if (!match("IDENTIFIER")) {
-            printf("Semantic Error: Expected variable name after type\n");
-            exit(1);
+bool isDeclared(const char *name, const char *scope) {
+    for (int i = 0; i < symbolCount; i++) {
+        if (strcmp(symbolTable[i].name, name) == 0 &&
+            (strcmp(symbolTable[i].scope, scope) == 0 || strcmp(symbolTable[i].scope, "global") == 0)) {
+            return true;
         }
-        char varName[100];
-        strcpy(varName, tokens[pos - 1].value);
+    }
+    return false;
+}
 
-        if (match("OPERATOR") && strcmp(tokens[pos - 1].value, "=") == 0) {
-            if (match("NUMBER")) {
-                if (strcmp(varType, "char") == 0) {
-                    printf("Semantic Error: Cannot assign int to char variable '%s'\n", varName);
-                    exit(1);
+const char* getType(const char *name, const char *scope) {
+    for (int i = 0; i < symbolCount; i++) {
+        if (strcmp(symbolTable[i].name, name) == 0 &&
+            (strcmp(symbolTable[i].scope, scope) == 0 || strcmp(symbolTable[i].scope, "global") == 0)) {
+            return symbolTable[i].type;
+        }
+    }
+    return NULL;
+}
+
+void addSymbol(const char *type, const char *name, const char *scope) {
+    strcpy(symbolTable[symbolCount].type, type);
+    strcpy(symbolTable[symbolCount].name, name);
+    strcpy(symbolTable[symbolCount].scope, scope);
+    symbolCount++;
+}
+
+void printSymbolTable() {
+    printf("Symbol Table:- \n");
+    fprintf(output, "-------------------------\n");
+    fprintf(output, " Name      Type     Scope\n");
+    fprintf(output, "-------------------------\n");
+    printf(       "-------------------------\n");
+    printf(       "Name       Type     Scope\n");
+    printf(       "-------------------------\n");
+
+    for (int i = 0; i < symbolCount; i++) {
+        fprintf(output, "%-10s %-8s %-10s\n", symbolTable[i].name, symbolTable[i].type, symbolTable[i].scope);
+        printf(        "%-10s %-8s %-10s\n", symbolTable[i].name, symbolTable[i].type, symbolTable[i].scope);
+    }
+    fprintf(output, "-------------------------\n");
+    printf(       "-------------------------\n");
+}
+
+void analyzeParseTree() {
+    char line[MAX_LINE];
+    char currentScope[50] = "global";
+    char lastType[20] = "";
+
+    while (fgets(line, sizeof(line), input)) {
+        // Remove trailing newline
+        line[strcspn(line, "\r\n")] = 0;
+
+        char *trimmed = line;
+        while (*trimmed == ' ' || *trimmed == '+' || *trimmed == '-' || *trimmed == '|') trimmed++;
+
+        if (strstr(trimmed, "Function Name:") == trimmed) {
+            sscanf(trimmed, "Function Name: %s", currentScope);
+            addSymbol("function", currentScope, "global");
+        } else if (strstr(trimmed, "Type:") == trimmed) {
+            sscanf(trimmed, "Type: %s", lastType);
+        } else if (strstr(trimmed, "Identifier:") == trimmed) {
+            char identifier[50];
+            sscanf(trimmed, "Identifier: %s", identifier);
+            if (!isDeclared(identifier, currentScope)) {
+                addSymbol(lastType, identifier, currentScope);
+            }
+        } else if (strstr(trimmed, "Expression:") == trimmed) {
+            char expr[200];
+            strcpy(expr, trimmed + strlen("Expression: "));
+
+            // Check for assignment expressions like x = y + z
+            char lhs[50], rhs[150];
+            if (strstr(expr, "=")) {
+                sscanf(expr, "%s = %[^\n]", lhs, rhs);
+                if (!isDeclared(lhs, currentScope)) {
+                    printf("Warning: Undeclared identifier '%s' in scope '%s'\n", lhs, currentScope);
+                    fprintf(output, "Warning: Undeclared identifier '%s' in scope '%s'\n", lhs, currentScope);
                 }
-            } else if (match("STRING_LITERAL")) {
-                if (strcmp(varType, "int") == 0 || strcmp(varType, "float") == 0) {
-                    printf("Semantic Error: Cannot assign string to %s variable '%s'\n", varType, varName);
-                    exit(1);
+                // Check identifiers in RHS
+                char *token = strtok(rhs, " +-*/<>()");
+                while (token) {
+                    if (!isdigit(token[0]) && !isDeclared(token, currentScope)) {
+                        printf("Warning: Undeclared identifier '%s' used in expression in scope '%s'\n", token, currentScope);
+                        fprintf(output, "Warning: Undeclared identifier '%s' used in expression in scope '%s'\n", token, currentScope);
+                    }
+                    token = strtok(NULL, " +-*/<>()");
                 }
-            } else if (match("IDENTIFIER")) {
-                int idx = findSymbol(tokens[pos - 1].value);
-                if (idx == -1) {
-                    printf("Semantic Error: Variable '%s' used before declaration\n", tokens[pos - 1].value);
-                    exit(1);
+
+                // Type checking (simplified): types of lhs and first rhs identifier must match
+                const char *lhsType = getType(lhs, currentScope);
+                char firstId[50];
+                sscanf(rhs, "%s", firstId);
+                const char *rhsType = getType(firstId, currentScope);
+                if (lhsType && rhsType && strcmp(lhsType, rhsType) != 0) {
+                    printf("Type Error: Cannot assign %s to %s\n", rhsType, lhsType);
+                    fprintf(output, "Type Error: Cannot assign %s to %s\n", rhsType, lhsType);
                 }
-                // Optionally check type compatibility
-            } else {
-                printf("Semantic Error: Invalid assignment to variable '%s'\n", varName);
-                exit(1);
             }
         }
-
-        addSymbol(varName, varType);
-
-        if (match("SEPARATOR") && strcmp(tokens[pos - 1].value, ";") == 0) {
-            break;
-        } else if (match("SEPARATOR") && strcmp(tokens[pos - 1].value, ",") == 0) {
-            continue;
-        } else {
-            printf("Semantic Error: Invalid declaration syntax for '%s'\n", varName);
-            exit(1);
-        }
     }
-}
-
-// Assignment check
-void assignment() {
-    if (!match("IDENTIFIER")) return;
-    char varName[100];
-    strcpy(varName, tokens[pos - 1].value);
-    int idx = findSymbol(varName);
-    if (idx == -1) {
-        printf("Semantic Error: Variable '%s' used before declaration\n", varName);
-        exit(1);
-    }
-
-    expect("OPERATOR"); // '='
-
-    if (match("NUMBER")) {
-        if (strcmp(symbolTable[idx].type, "char") == 0) {
-            printf("Semantic Error: Cannot assign int to char variable '%s'\n", varName);
-            exit(1);
-        }
-    } else if (match("STRING_LITERAL")) {
-        if (strcmp(symbolTable[idx].type, "int") == 0 || strcmp(symbolTable[idx].type, "float") == 0) {
-            printf("Semantic Error: Cannot assign string to %s variable '%s'\n", symbolTable[idx].type, varName);
-            exit(1);
-        }
-    } else if (match("IDENTIFIER")) {
-        int otherIdx = findSymbol(tokens[pos - 1].value);
-        if (otherIdx == -1) {
-            printf("Semantic Error: Variable '%s' used before declaration\n", tokens[pos - 1].value);
-            exit(1);
-        }
-    } else {
-        printf("Semantic Error: Invalid assignment to variable '%s'\n", varName);
-        exit(1);
-    }
-
-    expect("SEPARATOR"); // ';'
-}
-
-// Main semantic analyzer
-void analyze() {
-    while (pos < total) {
-        if (strcmp(tokens[pos].type, "KEYWORD") == 0 &&
-           (strcmp(tokens[pos].value, "int") == 0 ||
-            strcmp(tokens[pos].value, "char") == 0 ||
-            strcmp(tokens[pos].value, "float") == 0)) {
-            declaration();
-        } else if (strcmp(tokens[pos].type, "IDENTIFIER") == 0) {
-            assignment();
-        } else {
-            pos++;
-        }
-    }
-    printf("Semantic Analysis Successful ✅\n");
 }
 
 int main() {
-    loadTokens();
-    analyze();
+    input = fopen("parse_tree.txt", "r");
+    if (!input) {
+        perror("Could not open parse_tree.txt");
+        return 1;
+    }
+
+    output = fopen("symbol_table.txt", "w");
+    if (!output) {
+        perror("Could not open symbol_table.txt");
+        fclose(input);
+        return 1;
+    }
+
+    analyzeParseTree();
+    printSymbolTable();
+
+    fclose(input);
+    fclose(output);
     return 0;
 }

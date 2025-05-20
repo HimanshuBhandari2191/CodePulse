@@ -1,6 +1,5 @@
-int main() {
-int a =10;
-int b=20;
-int c = a + b +a;
- return 0; 
-}
+int main() { 
+int a = 10;
+int b = 20;
+int c = a +b +a +a;
+return 0; }
