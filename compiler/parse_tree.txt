@@ -18,6 +18,6 @@ TranslationUnit
             +-- Type: int
             +-- Identifier: c
             +-- Initializer
-                +-- Expression: a + b + a + a 
-        +-- Return Statement
-            +-- Expression: 0 
+                +-- Expression: a + b + b + a 
+        +-- Printf Statement
+            +-- Arguments: "Hello, SEPARATOR SEPARATOR KEYWORD NUMBER SEPARATOR SEPARATOR SEPARATOR 
