@@ -35,9 +35,15 @@ def compile():
         subprocess.run(['gcc', parser_src, '-o', parser_bin], check=True)
         subprocess.run([parser_bin], cwd=COMPILER_DIR, check=True)
         
+        # Run sementic analyzer
+        semen_src = os.path.join(COMPILER_DIR, "semantic_analyzer.c")
+        semen_bin = os.path.join(COMPILER_DIR, "sementic")
+        subprocess.run(['gcc', semen_src, '-o', semen_bin], check=True)
+        subprocess.run([semen_bin], cwd=COMPILER_DIR, check=True)
+        
         # Read outputs
         output = {}
-        for filename in ['tokens.txt', 'parse_tree.txt']:
+        for filename in ['tokens.txt', 'parse_tree.txt','symbol_table.txt']:
             path = os.path.join(COMPILER_DIR, filename)
             if os.path.exists(path):
                 with open(path, 'r') as f:

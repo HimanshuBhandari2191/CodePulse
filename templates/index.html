@@ -33,6 +33,12 @@ int main() {
                 <h2>Parse Tree</h2>
                 <pre id="parse-tree"><span class="instruction">Click "Compile" to see parse tree</span></pre>
             </div>
+            
+            
+            <div class="output">
+                <h2>Symbol Table</h2>
+                <pre id="symbol-table"><span class="instruction">Click "Compile" to see symbol table</span></pre>
+            </div>
         </div>
     </div>
 
@@ -41,6 +47,7 @@ int main() {
             const code = document.getElementById('code').value;
             const tokensEl = document.getElementById('tokens');
             const parseTreeEl = document.getElementById('parse-tree');
+            const symbol = document.getElementById('symbol-table');
             const buttonText = document.getElementById('button-text');
             
             // Save original button text
@@ -50,6 +57,7 @@ int main() {
             buttonText.textContent = 'Compiling...';
             tokensEl.innerHTML = '<div class="status"><div class="loading"></div>Tokenizing code...</div>';
             parseTreeEl.innerHTML = '<div class="status"><div class="loading"></div>Building parse tree...</div>';
+            symbol.innerHTML = '<div class="status"><div class="loading"></div>Building symbol table...</div>';
             
             try {
                 const response = await fetch('/compile', {
@@ -84,6 +92,13 @@ int main() {
                     parseTreeEl.textContent = data.parse_tree;
                 } else {
                     parseTreeEl.innerHTML = `<div class="error">${data.parse_tree}</div>`;
+                }
+                // Format Symbol Table
+                if(data.symbol_table && !data.symbol_table.includes('Error')){
+                    symbol.textContent = data.symbol_table;
+                }
+                else{
+                symbol.innerHTML = `<div class="error">${data.symbol_table}</div>`;
                 }
                 
             } catch (error) {

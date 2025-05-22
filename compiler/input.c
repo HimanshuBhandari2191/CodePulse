@@ -1,8 +1,14 @@
+#include<stdio.h>
 
-int main() {
-int a = 10;
-int b = 20;
-int c=a+b+b+a;
-    printf("Hello, World!");
-    return 0;
+void foo(int a){
+  if(a == 0){
+    return b;
+  }
 }
+int main() {
+    int a = 10;
+    int a = 5;
+    int b = 10;
+    int c;
+    
+    return 0;}
