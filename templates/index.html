@@ -75,17 +75,22 @@ int main() {
                 }
                 
                 // Format tokens with syntax highlighting
-                if (data.tokens && !data.tokens.includes('Error')) {
-                    const formattedTokens = data.tokens.split('\n')
-                        .map(line => {
-                            const [type, value] = line.split(' ');
-                            return `<span class="token-${type.toLowerCase()}">${type.padEnd(12)} ${value}</span>`;
-                        })
-                        .join('\n');
-                    tokensEl.innerHTML = formattedTokens;
-                } else {
-                    tokensEl.innerHTML = data.tokens;
-                }
+              // Format tokens with syntax highlighting
+if (data.tokens && !data.tokens.includes('Error')) {
+    const formattedTokens = data.tokens.split('\n')
+        .filter(line => line.trim() !== '') // Filter out empty lines
+        .map(line => {
+            const parts = line.split(' ');
+            // Handle cases where token might have spaces in it (like string literals)
+            const type = parts[0];
+            const value = parts.slice(1).join(' ');
+            return `<span class="token-${type.toLowerCase()}">${type.padEnd(12)} ${value}</span>`;
+        })
+        .join('\n');
+    tokensEl.innerHTML = formattedTokens;
+} else {
+    tokensEl.innerHTML = data.tokens || 'No tokens generated';
+}
                 
                 // Format parse tree
                 if (data.parse_tree && !data.parse_tree.includes('Error')) {
