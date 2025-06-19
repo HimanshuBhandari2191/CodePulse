@@ -1,15 +1,13 @@
 #include<stdio.h>
 
-void foo(int a){
-  if(a == 0){
-    return b;
-  }
+int fun(int a){
+   if(a==0){
+     return a;
+   }
 }
-int main() {
-    int a = 10;
-    int a = 5;
-    int b = 10;
-    int c;
-    
-    return 0;
+
+int main(){
+int a = 0;
+int b = 0;
+return 0;
 }

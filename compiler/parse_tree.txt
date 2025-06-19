@@ -2,8 +2,8 @@ TranslationUnit
 +-- Include Directives
     +-- #include<stdio.h>
 +-- Function Definition
-    +-- Return Type: void
-    +-- Function Name: foo
+    +-- Return Type: int
+    +-- Function Name: fun
     +-- Parameters
         +-- Parameter
         |   +-- Type: int
@@ -13,7 +13,7 @@ TranslationUnit
             +-- Condition: a == 0 
             +-- Body (Compound Statement)
                 +-- Return Statement
-                    +-- Expression: b 
+                    +-- Expression: a 
 +-- Function Definition
     +-- Return Type: int
     +-- Function Name: main
@@ -23,19 +23,11 @@ TranslationUnit
             +-- Type: int
             +-- Identifier: a
             +-- Initializer
-                +-- Expression: 10 
-        +-- Declaration
-            +-- Type: int
-            +-- Identifier: a
-            +-- Initializer
-                +-- Expression: 5 
+                +-- Expression: 0 
         +-- Declaration
             +-- Type: int
             +-- Identifier: b
             +-- Initializer
-                +-- Expression: 10 
-        +-- Declaration
-            +-- Type: int
-            +-- Identifier: c
+                +-- Expression: 0 
         +-- Return Statement
             +-- Expression: 0 
